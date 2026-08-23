@@ -1,0 +1,192 @@
+{
+  "metadata": {
+    "description": "Example structured output from BrightData YouTube scraper (discover by keyword). This is what the API returns when TrendPulse sends a keyword like 'gaming highlights' to the BrightData /trigger endpoint.",
+    "scraper_used": "Youtube - Videos posts - discover by keyword",
+    "dataset_id": "gd_lk56epmy2i5g7lzu0k",
+    "api_endpoint": "POST https://api.brightdata.com/datasets/v3/trigger?dataset_id=gd_lk56epmy2i5g7lzu0k&format=json&type=discover_new&discover_by=keyword",
+    "request_input": {
+      "keyword": "gaming highlights",
+      "num_of_posts": 3,
+      "start_date": "08-15-2026"
+    },
+    "note": "Fields below are the raw BrightData response. TrendPulse normalizes these into consistent field names before displaying on the website."
+  },
+  "raw_brightdata_response": [
+    {
+      "url": "https://www.youtube.com/watch?v=FuE6hPyNMCy",
+      "title": "Insane 1v5 Clutch - Valorant Champions 2026",
+      "channel_name": "ProGaming",
+      "channel_url": "https://www.youtube.com/@ProGaming",
+      "views": 2400000,
+      "likes": 145000,
+      "num_comments": 8200,
+      "date_posted": "2026-08-21T14:00:00.000Z",
+      "duration": "12:30",
+      "video_length": 750,
+      "description": "Watch this insane 1v5 clutch in the Valorant Champions 2026 grand finals...",
+      "preview_image": "https://i.ytimg.com/vi/FuE6hPyNMCy/maxresdefault.jpg",
+      "tags": [
+        "gaming",
+        "valorant",
+        "esports",
+        "highlights"
+      ],
+      "video_id": "FuE6hPyNMCy",
+      "verified": true,
+      "is_sponsored": false,
+      "is_age_restricted": false
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=lkfjm2YRG-test",
+      "title": "Best Gaming Setup 2026 - Budget Build Guide",
+      "channel_name": "TechGamer",
+      "channel_url": "https://www.youtube.com/@TechGamer",
+      "views": 890000,
+      "likes": 45000,
+      "num_comments": 2100,
+      "date_posted": "2026-08-20T09:00:00.000Z",
+      "duration": "0:45",
+      "video_length": 45,
+      "description": "Building the best gaming setup on a budget for 2026...",
+      "preview_image": "https://i.ytimg.com/vi/lkfjm2YRG/maxresdefault.jpg",
+      "tags": [
+        "gaming",
+        "setup",
+        "budget",
+        "pcbuild"
+      ],
+      "video_id": "lkfjm2YRG-test",
+      "verified": false,
+      "is_sponsored": false,
+      "is_age_restricted": false
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=abc123XYZ",
+      "title": "Top 10 Gaming Moments This Week",
+      "channel_name": "GameHighlights",
+      "channel_url": "https://www.youtube.com/@GameHighlights",
+      "views": 1500000,
+      "likes": 89000,
+      "num_comments": 5400,
+      "date_posted": "2026-08-19T18:00:00.000Z",
+      "duration": "15:22",
+      "video_length": 922,
+      "description": "The best gaming moments from this week compiled into one video...",
+      "preview_image": "https://i.ytimg.com/vi/abc123XYZ/maxresdefault.jpg",
+      "tags": [
+        "gaming",
+        "highlights",
+        "top10"
+      ],
+      "video_id": "abc123XYZ",
+      "verified": true,
+      "is_sponsored": false,
+      "is_age_restricted": false
+    }
+  ],
+  "normalized_output_after_processing": [
+    {
+      "url": "https://www.youtube.com/watch?v=FuE6hPyNMCy",
+      "title": "Insane 1v5 Clutch - Valorant Champions 2026",
+      "channel_name": "ProGaming",
+      "views": 2400000,
+      "likes": 145000,
+      "num_comments": 8200,
+      "date_posted": "2026-08-21T14:00:00.000Z",
+      "duration": "12:30",
+      "preview_image": "https://i.ytimg.com/vi/FuE6hPyNMCy/maxresdefault.jpg",
+      "tags": [
+        "gaming",
+        "valorant",
+        "esports",
+        "highlights"
+      ],
+      "channel_url": "https://www.youtube.com/@ProGaming",
+      "stream": "gaming"
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=lkfjm2YRG-test",
+      "title": "Best Gaming Setup 2026 - Budget Build Guide",
+      "channel_name": "TechGamer",
+      "views": 890000,
+      "likes": 45000,
+      "num_comments": 2100,
+      "date_posted": "2026-08-20T09:00:00.000Z",
+      "duration": "0:45",
+      "preview_image": "https://i.ytimg.com/vi/lkfjm2YRG/maxresdefault.jpg",
+      "tags": [
+        "gaming",
+        "setup",
+        "budget",
+        "pcbuild"
+      ],
+      "channel_url": "https://www.youtube.com/@TechGamer",
+      "stream": "gaming"
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=abc123XYZ",
+      "title": "Top 10 Gaming Moments This Week",
+      "channel_name": "GameHighlights",
+      "views": 1500000,
+      "likes": 89000,
+      "num_comments": 5400,
+      "date_posted": "2026-08-19T18:00:00.000Z",
+      "duration": "15:22",
+      "preview_image": "https://i.ytimg.com/vi/abc123XYZ/maxresdefault.jpg",
+      "tags": [
+        "gaming",
+        "highlights",
+        "top10"
+      ],
+      "channel_url": "https://www.youtube.com/@GameHighlights",
+      "stream": "gaming"
+    }
+  ],
+  "analytics_output": {
+    "view_distribution": [
+      {
+        "label": "0-1K",
+        "count": 0
+      },
+      {
+        "label": "1K-10K",
+        "count": 0
+      },
+      {
+        "label": "10K-100K",
+        "count": 0
+      },
+      {
+        "label": "100K-1M",
+        "count": 1
+      },
+      {
+        "label": "1M-10M",
+        "count": 2
+      },
+      {
+        "label": "10M+",
+        "count": 0
+      }
+    ],
+    "top_videos": [
+      {
+        "title": "Insane 1v5 Clutch - Valorant Champions 2026",
+        "views": 2400000,
+        "channel_name": "ProGaming"
+      },
+      {
+        "title": "Top 10 Gaming Moments This Week",
+        "views": 1500000,
+        "channel_name": "GameHighlights"
+      },
+      {
+        "title": "Best Gaming Setup 2026 - Budget Build Guide",
+        "views": 890000,
+        "channel_name": "TechGamer"
+      }
+    ],
+    "shorts_detected": 1,
+    "regular_videos": 2
+  }
+}
