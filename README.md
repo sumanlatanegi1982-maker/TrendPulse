@@ -22,7 +22,7 @@
 
 ## 🎥 Demo Video
 
-**Link:** `[Add your YouTube/demo video link here]`
+https://youtu.be/xefEctUgBd0
 
 The demo video walks through:
 - Starting the app and loading trending videos
@@ -32,7 +32,7 @@ The demo video walks through:
 - Triggering a manual refresh (scrape new data via Bright Data API)
 - Showing the self-healing mechanism when data is broken
 
-> **Recording tip:** Use [OBS Studio](https://obsproject.com/) or [Loom](https://www.loom.com/) to record your screen. Keep it under 3 minutes.
+> The video is hosted on YouTube (unlisted) and plays directly in the GitHub README.
 
 ---
 
@@ -168,6 +168,21 @@ TrendPulse/
 └── example_structured_output.json  # Example of Bright Data's output format
 ```
 
+### Where Each Piece Lives
+
+| File | Purpose | Required for Submission? |
+|---|---|---|
+| `app.py` | Main backend server | ✅ Source code |
+| `index.html` | Frontend UI | ✅ Source code |
+| `requirements.txt` | Python dependencies | ✅ Reproducibility |
+| `README.md` | Project documentation | ✅ Clear README |
+| `example_structured_output.json` | Sample Bright Data output | ✅ Example structured output |
+| `BRIGHTDATA_USAGE.md` | Bright Data explanation | ✅ Bright Data usage |
+| `.env.example` | API key template | ✅ Setup guide |
+| `.gitignore` | Git hygiene | ✅ Best practice |
+| `cached_data.json` | Cached data | ❌ Auto-generated (in .gitignore) |
+| `.env` | Real API key | ❌ Secret (in .gitignore) |
+
 ---
 
 ## 🔧 How to Run
@@ -200,8 +215,17 @@ This installs:
 ### Step 3: Set Up Your API Key
 
 ```bash
+# Copy the template
 cp .env.example .env
+
 # Edit .env and add your Bright Data API key
+# Replace the placeholder with your real key
+echo 'BRIGHTDATA_API_KEY=your_real_api_key_here' > .env
+```
+
+Or open `.env` in any text editor and paste your key:
+```
+BRIGHTDATA_API_KEY=your_real_api_key_here
 ```
 
 > 🔑 Get your API key from: https://brightdata.com/cp/setting/users
@@ -215,6 +239,8 @@ python app.py
 
 **Option B — Cache Mode (uses cached_data.json, zero API calls):**
 ```bash
+# First run in live mode to create cached_data.json
+# Then set the environment variable
 export USE_CACHED_DATA=true    # Linux/Mac
 set USE_CACHED_DATA=true       # Windows
 python app.py
@@ -222,6 +248,7 @@ python app.py
 
 **Option C — Demo Mode (no API key, uses built-in sample data):**
 ```bash
+# Don't set any API key in .env, just run
 python app.py
 ```
 The app will detect no API key and automatically use sample data (23 videos across 10 streams, dated August 2026).
@@ -232,23 +259,58 @@ The app will detect no API key and automatically use sample data (23 videos acro
 http://localhost:5000
 ```
 
+The app runs on port 5000 by default. You should see:
+- Stream filter buttons at the top (All, Gaming, Education, Tech, Music, etc.)
+- Video cards with thumbnails, titles, channel names, view counts
+- Analytics section with view distribution chart, top 5 videos, stream comparison
+- A "Refresh" button to trigger a new scrape
+
+### How It Runs
+
+```
+User opens browser → Flask serves index.html
+                   → Frontend calls /api/youtube/trending
+                   → Backend checks cache (cached_data.json)
+                      ├─ Cache exists → Return cached videos (0 API calls)
+                      └─ No cache → Call Bright Data API
+                                   → Trigger async scrape
+                                   → Poll until ready
+                                   → Download + validate results
+                                   → Save to cached_data.json
+                                   → Return videos to frontend
+                   → Frontend renders video cards + analytics
+```
+
+The scheduler runs in a background thread:
+```
+Every 60 seconds → schedule.run_pending()
+                 → At 2:00 AM daily → scrape_all_streams()
+                 → New data replaces cached_data.json
+```
+
 ---
 
 ## 🔌 Bright Data Scraper Studio Usage
+
+### What We Used
+
+TrendPulse uses **Bright Data Scraper Studio's pre-built YouTube scrapers** — no custom scraper code, no AI scrapers. We used the **dataset trigger API** to scrape YouTube video data by search keyword.
 
 ### Dataset IDs (Pre-Built by Bright Data)
 
 | Dataset | ID | Purpose |
 |---|---|---|
 | YouTube Videos | `gd_lk56epmy2i5g7lzu0k` | Scrape video metadata by search keyword |
-| YouTube Channels | `gd_lk538t2k2p1k3oos71` | Scrape channel-level stats |
-| YouTube Comments | `gd_lk9q0ew71spt1mxywf` | Scrape video comments |
+| YouTube Channels | `gd_lk538t2k2p1k3oos71` | Scrape channel-level stats (future use) |
+| YouTube Comments | `gd_lk9q0ew71spt1mxywf` | Scrape video comments (future use) |
 
 ### API Flow (3 Steps)
 
 ```
 Step 1: TRIGGER
    POST https://api.brightdata.com/datasets/v3/trigger?dataset_id=gd_lk56epmy2i5g7lzu0k&format=json
+   Body: [{"url": "https://www.youtube.com/results?search_query=gaming+highlights"}]
+   Headers: Authorization: Bearer <API_KEY>
    → Returns: {"snapshot_id": "snap_xxxxx"}
 
 Step 2: POLL (repeat until status = "ready")
@@ -260,7 +322,35 @@ Step 3: DOWNLOAD
    → Returns: [{"url": "...", "title": "...", "views": 12345, ...}, ...]
 ```
 
+### How Each Stream Is Scraped
+
+Each content stream has 3 search keywords defined in `STREAM_KEYWORDS`:
+
+```python
+STREAM_KEYWORDS = {
+    "gaming":    ["gaming highlights", "gameplay", "walkthrough"],
+    "education": ["tutorial", "explained", "course"],
+    "tech":      ["tech review", "gadgets", "technology"],
+    "music":     ["music video", "new song", "cover"],
+    "comedy":    ["funny", "comedy sketch", "meme"],
+    "fitness":   ["workout", "fitness", "gym"],
+    "cooking":   ["recipe", "cooking", "food"],
+    "lifestyle": ["vlog", "daily routine", "lifestyle"],
+    "news":      ["breaking news", "news today", "current events"],
+    "finance":   ["stock market", "crypto", "personal finance"],
+}
+```
+
+For each keyword, the app sends a YouTube search URL to Bright Data:
+```
+https://www.youtube.com/results?search_query=gaming+highlights
+```
+
+Bright Data's pre-built scraper visits that URL, extracts all video results, and returns structured JSON.
+
 ### Self-Healing Mechanism
+
+When Bright Data returns data, some records may have missing or broken fields (empty titles, null view counts, etc.). The self-healing system:
 
 1. **Validates** each record against required fields (`url`, `title`)
 2. **Separates** good records from broken ones
@@ -268,17 +358,72 @@ Step 3: DOWNLOAD
 4. **Merges** healed records back with good ones
 5. **Skips** records that still fail after 3 attempts (logs a warning)
 
+```python
+def _healed_scrape(self, dataset_id, input_data, required_fields, ...):
+    good_records = []
+    pending = list(input_data)
+
+    for cycle in range(self.MAX_HEAL_CYCLES):  # 3 cycles
+        results = self._trigger_async(dataset_id, pending)
+        good, broken = self._split_valid_invalid(results, required_fields)
+        good_records.extend(good)
+        pending = broken  # Retry only broken records
+        if not pending:
+            break  # All healed!
+```
+
 ### Credit-Saving Cache
+
+To minimize Bright Data API credit usage:
 
 1. **First run** — Scrape all streams → save to `cached_data.json`
 2. **Subsequent runs** — Set `USE_CACHED_DATA=true` → loads from file → zero API calls
 3. **Scheduled refresh** — Daily at 2:00 AM, the scheduler re-scrapes and overwrites the cache
+
+This means you can demo the app unlimited times on a single scrape's worth of credits.
 
 For the full Bright Data usage guide, see [BRIGHTDATA_USAGE.md](BRIGHTDATA_USAGE.md).
 
 ---
 
 ## 📊 Example Structured Output
+
+Bright Data's YouTube Videos dataset returns this structure (example with real field names):
+
+```json
+{
+  "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+  "title": "Video Title Here",
+  "description": "Full video description...",
+  "channel_name": "Channel Name",
+  "channel_url": "https://www.youtube.com/@channelname",
+  "date_posted": "2026-08-21T14:00:00Z",
+  "views": 2400000,
+  "likes": 145000,
+  "num_comments": 8200,
+  "duration": "12:30",
+  "preview_image": "https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
+  "tags": ["gaming", "highlights"]
+}
+```
+
+TrendPulse normalizes this into its internal format:
+
+```json
+{
+  "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+  "title": "Video Title Here",
+  "channel_name": "Channel Name",
+  "views": 2400000,
+  "likes": 145000,
+  "comments": 8200,
+  "date_posted": "2026-08-21T14:00:00Z",
+  "duration": "12:30",
+  "preview_image": "https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
+  "stream": "gaming",
+  "is_short": false
+}
+```
 
 See [example_structured_output.json](example_structured_output.json) for a full example with multiple videos.
 
@@ -288,12 +433,26 @@ See [example_structured_output.json](example_structured_output.json) for a full 
 
 | Layer | Technology |
 |---|---|
-| **Frontend** | HTML5, CSS3, Vanilla JavaScript |
+| **Frontend** | HTML5, CSS3 (custom, no framework), Vanilla JavaScript |
 | **Backend** | Python 3.12, Flask |
 | **Data Source** | Bright Data Scraper Studio (pre-built YouTube datasets) |
 | **Scheduling** | `schedule` Python library (background thread) |
 | **Caching** | JSON file (`cached_data.json`) |
-| **API** | Bright Data REST API |
+| **API** | Bright Data REST API (`/datasets/v3/trigger`, `/progress`, `/snapshot`) |
+| **Env Management** | python-dotenv |
+| **HTTP Client** | requests |
+
+---
+
+## 📸 Codebase Screenshots
+
+> Add screenshots of your running app here:
+
+1. **Main Dashboard** — Shows stream filters + video cards
+2. **Stream Filter Active** — e.g., Gaming selected, only gaming videos visible
+3. **Analytics View** — View distribution chart + Top 5 videos + Stream comparison
+4. **Shorts Tab** — Shows only YouTube Shorts (≤60s duration)
+5. **Terminal Output** — Shows self-healing logs and cache loading
 
 ---
 
@@ -301,8 +460,8 @@ See [example_structured_output.json](example_structured_output.json) for a full 
 
 | Requirement | Status | File |
 |---|---|---|
-| Demo video showing working project | ⬜ Record & add link | See `DEMO_VIDEO_SCRIPT.md` |
-| Public source-code repository | ✅ | GitHub |
+| Demo video showing working project | Done | https://youtu.be/xefEctUgBd0 |
+| Public source-code repository | Done | https://github.com/sumanlatanegi1982-maker/TrendPulse |
 | Clear README | ✅ | `README.md` (this file) |
 | Example structured output | ✅ | `example_structured_output.json` |
 | Bright Data usage explanation | ✅ | `BRIGHTDATA_USAGE.md` + this README |
