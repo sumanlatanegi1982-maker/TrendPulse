@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrendPulse — YouTube Trend Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-lg: 24px;
+  --max-width: 1200px;
+  --transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* ─── LIGHT BASE ─── */
+:root, :root[data-theme="light"] {
+  --bg: #f5f5f4;
+  --bg-gradient: linear-gradient(145deg, #f5f5f4, #e7e5e4);
+  --surface: #ffffff;
+  --surface-hover: #fafaf9;
+  --border: rgba(0,0,0,0.08);
+  --border-strong: rgba(0,0,0,0.14);
+  --text: #1c1917;
+  --text-dim: #57534e;
+  --text-mute: #a8a29e;
+  --accent: #dc2626;
+  --accent-hover: #b91c1c;
+  --accent-light: rgba(220,38,38,0.06);
+  --accent-text: #ffffff;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.06);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.08), 0 20px 48px rgba(0,0,0,0.08);
+  --hero-glow: radial-gradient(circle at 70% 30%, rgba(220,38,38,0.06), transparent 60%);
+}
+
+/* ─── DARK BASE (black-red) ─── */
+:root[data-theme="dark"] {
+  --bg: #0a0808;
+  --bg-gradient: linear-gradient(145deg, #140d0d, #0a0808);
+  --surface: #1a1010;
+  --surface-hover: #241515;
+  --border: rgba(220,38,38,0.15);
+  --border-strong: rgba(220,38,38,0.30);
+  --text: #f5e8e8;
+  --text-dim: #c09090;
+  --text-mute: #7a5454;
+  --accent: #ef4444;
+  --accent-hover: #f87171;
+  --accent-light: rgba(239,68,68,0.12);
+  --accent-text: #ffffff;
+  --shadow: 0 1px 3px rgba(0,0,0,0.5), 0 8px 24px rgba(50,0,0,0.3);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.5), 0 20px 48px rgba(50,0,0,0.3);
+  --hero-glow: radial-gradient(circle at 70% 30%, rgba(239,68,68,0.1), transparent 60%);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  background-image: var(--bg-gradient);
+  background-attachment: fixed;
+  color: var(--text);
+  line-height: 1.6;
+  transition: background var(--transition), color var(--transition);
+  min-height: 100vh;
+}
+
+/* ─── Navbar ─── */
+.navbar {
+  position: sticky; top: 0; z-index: 100;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  transition: all var(--transition);
+}
+.nav-inner {
+  max-width: var(--max-width); margin: 0 auto;
+  padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.nav-logo {
+  font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em;
+  display: flex; align-items: center; gap: 8px; cursor: pointer;
+}
+.nav-logo .logo-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--accent); transition: background var(--transition);
+}
+.nav-right { display: flex; align-items: center; gap: 12px; }
+
+.theme-toggle {
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: var(--surface); color: var(--text);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; transition: all 0.2s;
+}
+.theme-toggle:hover { background: var(--surface-hover); border-color: var(--accent); }
+
+.nav-link {
+  padding: 8px 16px; border-radius: var(--radius-sm);
+  font-weight: 600; font-size: 0.9rem; cursor: pointer;
+  color: var(--text-dim); background: none; border: none;
+  font-family: var(--font-body); transition: all 0.2s;
+}
+.nav-link:hover { color: var(--text); background: var(--accent-light); }
+.nav-link.active { color: var(--accent); background: var(--accent-light); }
+
+/* ─── Hero ─── */
+.hero {
+  max-width: var(--max-width); margin: 0 auto;
+  padding: 48px 24px 32px; text-align: center; position: relative;
+}
+.hero::before {
+  content: ''; position: absolute; inset: 0;
+  background: var(--hero-glow); pointer-events: none;
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 16px; border-radius: 100px;
+  background: var(--accent-light); border: 1px solid var(--border-strong);
+  font-size: 0.82rem; font-weight: 600; color: var(--accent); margin-bottom: 20px;
+}
+.hero-badge .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent); animation: pulse 2s ease infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+.hero h1 {
+  font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 800;
+  letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 12px;
+}
+.hero h1 .grad {
+  background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.hero p {
+  font-size: 1.05rem; color: var(--text-dim);
+  max-width: 580px; margin: 0 auto 24px;
+}
+
+/* ─── Buttons ─── */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 20px; border-radius: var(--radius-sm);
+  font-weight: 700; font-size: 0.9rem; font-family: var(--font-body);
+  cursor: pointer; transition: all 0.2s; border: none; text-decoration: none;
+}
+.btn-primary { background: var(--accent); color: var(--accent-text); }
+.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: var(--shadow-lg); }
+.btn-ghost { background: var(--surface); color: var(--text); border: 1px solid var(--border-strong); }
+.btn-ghost:hover { background: var(--surface-hover); border-color: var(--accent); }
+
+/* ─── Stream filters ─── */
+.stream-filters {
+  max-width: var(--max-width); margin: 0 auto;
+  padding: 0 24px 24px;
+  display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+}
+.stream-chip {
+  padding: 8px 18px; border-radius: 100px;
+  font-weight: 600; font-size: 0.85rem; cursor: pointer;
+  transition: all 0.2s; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-dim);
+  font-family: var(--font-body);
+}
+.stream-chip:hover { border-color: var(--accent); color: var(--text); }
+.stream-chip.active { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+
+/* ─── Content type tabs ─── */
+.content-tabs {
+  max-width: var(--max-width); margin: 0 auto;
+  padding: 0 24px 20px;
+  display: flex; gap: 8px; justify-content: center;
+}
+.content-tab {
+  padding: 8px 20px; border-radius: var(--radius-sm);
+  font-weight: 600; font-size: 0.85rem; cursor: pointer;
+  border: 2px solid var(--border); background: var(--surface);
+  color: var(--text-dim); font-family: var(--font-body); transition: all 0.2s;
+}
+.content-tab:hover { border-color: var(--border-strong); color: var(--text); }
+.content-tab.active { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+/* ─── Stats row ─── */
+.stats-row {
+  max-width: var(--max-width); margin: 0 auto;
+  padding: 0 24px 32px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px;
+}
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px; transition: all var(--transition);
+}
+.stat-card:hover { box-shadow: var(--shadow); }
+.stat-card .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--accent); letter-spacing: -0.02em; }
+.stat-card .stat-label { font-size: 0.78rem; color: var(--text-mute); font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+
+/* ─── Analytics grid ─── */
+.analytics-grid {
+  max-width: var(--max-width); margin: 0 auto;
+  padding: 0 24px 40px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+}
+.analytics-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px; transition: all var(--transition);
+}
+.analytics-card:hover { box-shadow: var(--shadow); }
+.analytics-card h3 {
+  font-size: 1.1rem; font-weight: 700; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+.analytics-card .card-subtitle {
+  font-size: 0.82rem; color: var(--text-mute); margin-bottom: 16px;
+}
+
+/* ─── Bar chart (CSS only) ─── */
+.bar-chart { display: flex; flex-direction: column; gap: 8px; }
+.bar-row { display: flex; align-items: center; gap: 8px; }
+.bar-label { font-size: 0.78rem; color: var(--text-dim); font-family: var(--font-mono);
+  min-width: 60px; text-align: right; }
+.bar-track { flex: 1; height: 24px; background: var(--accent-light);
+  border-radius: 6px; overflow: hidden; }
+.bar-fill { height: 100%; background: var(--accent); border-radius: 6px;
+  transition: width 0.6s ease; display: flex; align-items: center;
+  justify-content: flex-end; padding-right: 6px; }
+.bar-value { font-size: 0.72rem; font-weight: 700; color: var(--accent-text); }
+
+/* ─── Hashtag pills ─── */
+.hashtag-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.hashtag-pill {
+  padding: 6px 14px; border-radius: 100px;
+  background: var(--accent-light); border: 1px solid var(--border-strong);
+  font-size: 0.82rem; font-weight: 600; color: var(--accent);
+  cursor: pointer; transition: all 0.2s;
+}
+.hashtag-pill:hover { background: var(--accent); color: var(--accent-text); }
+.hashtag-pill .htag-count { font-size: 0.7rem; color: var(--text-mute); margin-left: 4px; }
+.hashtag-pill:hover .htag-count { color: var(--accent-text); opacity: 0.8; }
+
+/* ─── Best time display ─── */
+.best-time-display { text-align: center; padding: 8px 0; }
+.best-time-display .big-time {
+  font-size: 2.5rem; font-weight: 800; color: var(--accent);
+  font-family: var(--font-mono); letter-spacing: -0.02em;
+}
+.best-time-display .time-label { font-size: 0.85rem; color: var(--text-dim); margin-top: 4px; }
+.top-hours { display: flex; gap: 8px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+.top-hour-chip {
+  padding: 6px 12px; border-radius: 8px; background: var(--accent-light);
+  font-size: 0.78rem; font-weight: 600; color: var(--accent);
+}
+
+/* ─── Stream comparison ─── */
+.stream-comparison { display: flex; flex-direction: column; gap: 10px; }
+.stream-bar-row { display: flex; align-items: center; gap: 10px; }
+.stream-bar-label { font-size: 0.82rem; font-weight: 600; min-width: 80px; text-transform: capitalize; }
+.stream-bar-track { flex: 1; height: 20px; background: var(--accent-light); border-radius: 6px; overflow: hidden; }
+.stream-bar-fill { height: 100%; background: var(--accent); border-radius: 6px; transition: width 0.6s ease; }
+.stream-bar-value { font-size: 0.75rem; color: var(--text-mute); font-family: var(--font-mono); min-width: 60px; }
+
+/* ─── Trend cards ─── */
+.content-section { max-width: var(--max-width); margin: 0 auto; padding: 0 24px 80px; }
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+.section-title { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+.source-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 100px;
+  font-size: 0.72rem; font-weight: 600; font-family: var(--font-mono);
+}
+.source-badge.live { background: rgba(34,197,94,0.12); color: #16a34a; }
+.source-badge.demo { background: var(--accent-light); color: var(--accent); }
+.source-badge .live-dot { width:6px; height:6px; border-radius:50%; background:#16a34a; animation: pulse 2s ease infinite; }
+
+.trend-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;
+}
+.trend-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+  transition: all var(--transition); cursor: pointer; position: relative;
+}
+.trend-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--border-strong); }
+.trend-card .card-thumb {
+  width: 100%; aspect-ratio: 16/9; object-fit: cover;
+  background: var(--accent-light); display: block;
+}
+.trend-card .card-body { padding: 14px; }
+.trend-card .card-title {
+  font-size: 0.92rem; font-weight: 600; line-height: 1.4; margin-bottom: 6px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.trend-card .card-creator { font-size: 0.82rem; color: var(--text-dim); font-weight: 500; margin-bottom: 10px; }
+.trend-card .card-stats { display: flex; gap: 14px; font-size: 0.78rem; color: var(--text-mute); }
+.trend-card .card-stream {
+  position: absolute; top: 10px; right: 10px;
+  padding: 4px 10px; border-radius: 100px;
+  font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+  background: var(--accent); color: var(--accent-text); z-index: 2;
+}
+.trend-card .card-duration {
+  position: absolute; bottom: 0; right: 0;
+  padding: 4px 8px; border-top-left-radius: var(--radius-sm);
+  background: rgba(0,0,0,0.75); color: #fff;
+  font-size: 0.72rem; font-family: var(--font-mono); font-weight: 600; z-index: 2;
+}
+.trend-card .card-type-badge {
+  position: absolute; top: 10px; left: 10px;
+  padding: 3px 8px; border-radius: 6px;
+  font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+  background: rgba(0,0,0,0.7); color: #fff; z-index: 2;
+}
+
+/* ─── Loading skeleton ─── */
+.loading-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+.skeleton-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.skeleton-card .skel-thumb { width: 100%; aspect-ratio: 16/9; background: var(--accent-light); animation: shimmer 1.5s infinite; }
+.skeleton-card .skel-body { padding: 14px; }
+.skeleton-card .skel-line { height: 10px; border-radius: 5px; background: var(--accent-light); margin-bottom: 8px; animation: shimmer 1.5s infinite; }
+.skeleton-card .skel-line.short { width: 60%; }
+@keyframes shimmer { 0%{opacity:0.3;} 50%{opacity:0.6;} 100%{opacity:0.3;} }
+
+/* ─── Empty state ─── */
+.state-box { text-align: center; padding: 48px 24px; color: var(--text-dim); }
+.state-box .state-icon { font-size: 2.5rem; margin-bottom: 12px; }
+.state-box h3 { font-size: 1.1rem; margin-bottom: 6px; color: var(--text); }
+.state-box p { font-size: 0.9rem; }
+
+/* ─── Heal banner ─── */
+.heal-banner {
+  display: none; max-width: var(--max-width); margin: 0 auto 16px;
+  padding: 10px 18px; border-radius: var(--radius-sm);
+  background: var(--accent-light); border: 1px solid var(--border-strong);
+  font-size: 0.82rem; font-weight: 500; color: var(--text-dim);
+  align-items: center; gap: 8px;
+}
+.heal-banner.show { display: flex; }
+
+/* ─── Cache status ─── */
+.cache-status {
+  font-size: 0.75rem; color: var(--text-mute); font-family: var(--font-mono);
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* ─── Footer ─── */
+.footer {
+  border-top: 1px solid var(--border); padding: 28px 24px;
+  text-align: center; color: var(--text-mute); font-size: 0.82rem;
+}
+.footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  .analytics-grid { grid-template-columns: 1fr; }
+  .trend-grid, .loading-grid { grid-template-columns: 1fr; }
+  .nav-inner { padding: 12px 16px; }
+  .hero { padding: 32px 16px 24px; }
+}
+@media (max-width: 480px) {
+  .stream-filters { gap: 6px; }
+  .stream-chip { padding: 6px 12px; font-size: 0.78rem; }
+  .stats-row { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════ NAVBAR ══════════ -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <div class="nav-logo" onclick="scrollToTop()">
+      <span class="logo-dot"></span> TrendPulse
+    </div>
+    <div class="nav-right">
+      <button class="nav-link active" onclick="scrollToSection('trending')">Trending</button>
+      <button class="nav-link" onclick="scrollToSection('analytics')">Analytics</button>
+      <button class="nav-link" onclick="refreshData()">Refresh</button>
+      <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Toggle light/dark">&#9728;&#65039;</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ══════════ HERO ══════════ -->
+<section class="hero">
+  <div class="hero-badge">
+    <span class="dot"></span>
+    <span id="badgeText">YouTube trend analytics for content creators</span>
+  </div>
+  <h1>Track <span class="grad">YouTube trends</span> in your stream</h1>
+  <p>Discover trending videos and shorts, trending hashtags, best upload times, and view analytics — all powered by BrightData with self-healing scrapers.</p>
+</section>
+
+<!-- ══════════ STREAM FILTERS ══════════ -->
+<div class="stream-filters" id="streamFilters">
+  <button class="stream-chip active" data-stream="" onclick="filterStream('')">All</button>
+  <button class="stream-chip" data-stream="gaming" onclick="filterStream('gaming')">&#127918; Gaming</button>
+  <button class="stream-chip" data-stream="education" onclick="filterStream('education')">&#128218; Education</button>
+  <button class="stream-chip" data-stream="tech" onclick="filterStream('tech')">&#128187; Tech</button>
+  <button class="stream-chip" data-stream="music" onclick="filterStream('music')">&#127925; Music</button>
+  <button class="stream-chip" data-stream="comedy" onclick="filterStream('comedy')">&#128514; Comedy</button>
+  <button class="stream-chip" data-stream="fitness" onclick="filterStream('fitness')">&#128170; Fitness</button>
+  <button class="stream-chip" data-stream="cooking" onclick="filterStream('cooking')">&#127859; Cooking</button>
+  <button class="stream-chip" data-stream="lifestyle" onclick="filterStream('lifestyle')">&#127775; Lifestyle</button>
+  <button class="stream-chip" data-stream="finance" onclick="filterStream('finance')">&#128176; Finance</button>
+  <button class="stream-chip" data-stream="news" onclick="filterStream('news')">&#128240; News</button>
+</div>
+
+<!-- ══════════ CONTENT TYPE TABS ══════════ -->
+<div class="content-tabs" id="contentTabs">
+  <button class="content-tab active" data-type="all" onclick="filterType('all')">All</button>
+  <button class="content-tab" data-type="videos" onclick="filterType('videos')">&#9654; Videos</button>
+  <button class="content-tab" data-type="shorts" onclick="filterType('shorts')">&#9889; Shorts</button>
+</div>
+
+<!-- ══════════ STATS ROW ══════════ -->
+<div class="stats-row" id="statsRow">
+  <div class="stat-card"><div class="stat-value" id="statTotal">&mdash;</div><div class="stat-label">Trending Items</div></div>
+  <div class="stat-card"><div class="stat-value" id="statVideos">&mdash;</div><div class="stat-label">Videos</div></div>
+  <div class="stat-card"><div class="stat-value" id="statShorts">&mdash;</div><div class="stat-label">Shorts</div></div>
+  <div class="stat-card"><div class="stat-value" id="statAvgViews">&mdash;</div><div class="stat-label">Avg Views</div></div>
+
+</div>
+
+<!-- ══════════ ANALYTICS SECTION ══════════ -->
+<div class="analytics-grid" id="analytics">
+  <!-- View Distribution -->
+  <div class="analytics-card">
+    <h3>&#128202; View Distribution</h3>
+    <div class="card-subtitle">How many videos fall in each view range</div>
+    <div class="bar-chart" id="viewDistChart"></div>
+  </div>
+
+  <!-- Top Videos -->
+  <div class="analytics-card">
+    <h3>&#128293; Top 5 Trending Videos</h3>
+    <div class="card-subtitle">Most viewed videos in this stream</div>
+    <div id="topVideosList"></div>
+  </div>
+
+  <!-- Stream Comparison -->
+  <div class="analytics-card">
+    <h3>&#128200; Stream Comparison</h3>
+    <div class="card-subtitle">Average views by content category</div>
+    <div class="stream-comparison" id="streamComparison"></div>
+  </div>
+</div>
+
+<!-- ══════════ HEAL BANNER ══════════ -->
+<div class="heal-banner" id="healBanner">
+  <span>&#128295;</span>
+  <span id="healText">Self-healing active: repairing broken data records...</span>
+</div>
+
+<!-- ══════════ TRENDING CONTENT ══════════ -->
+<section class="content-section" id="trending">
+  <div class="section-header">
+    <h2 class="section-title" id="contentTitle">Trending YouTube Videos</h2>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span class="cache-status" id="cacheStatus"></span>
+      <span class="source-badge demo" id="sourceBadge"><span class="live-dot"></span> DEMO</span>
+    </div>
+  </div>
+  <div id="contentArea">
+    <div class="loading-grid" id="loadingGrid">
+      <div class="skeleton-card"><div class="skel-thumb"></div><div class="skel-body"><div class="skel-line"></div><div class="skel-line short"></div></div></div>
+      <div class="skeleton-card"><div class="skel-thumb"></div><div class="skel-body"><div class="skel-line"></div><div class="skel-line short"></div></div></div>
+      <div class="skeleton-card"><div class="skel-thumb"></div><div class="skel-body"><div class="skel-line"></div><div class="skel-line short"></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ FOOTER ══════════ -->
+<footer class="footer">
+  <p>TrendPulse &mdash; YouTube trend analytics with <a href="https://brightdata.com" target="_blank">BrightData</a></p>
+  <p style="margin-top:4px;font-size:0.78rem;">Scheduled auto-scraping &middot; Self-healing scrapers &middot; Real-time trend data</p>
+</footer>
+
+<script>
+(function() {
+  var currentStream = '';
+  var currentType = 'all';
+  var baseTheme = localStorage.getItem('tp-base-theme') || 'light';
+
+  // ════════════════ THEME ═══════════════
+  function applyTheme() {
+    document.documentElement.setAttribute('data-theme', baseTheme);
+    var btn = document.getElementById('themeBtn');
+    if (btn) btn.textContent = baseTheme === 'light' ? '\u2600\uFE0F' : '\uD83C\uDF19';
+  }
+  function toggleTheme() {
+    baseTheme = baseTheme === 'light' ? 'dark' : 'light';
+    localStorage.setItem('tp-base-theme', baseTheme);
+    applyTheme();
+  }
+  window.toggleTheme = toggleTheme;
+
+  // ════════════════ NAV ════════════════
+  function scrollToTop() { window.scrollTo({top:0, behavior:'smooth'}); }
+  window.scrollToTop = scrollToTop;
+
+  function scrollToSection(id) {
+    document.getElementById(id).scrollIntoView({behavior:'smooth', block:'start'});
+  }
+  window.scrollToSection = scrollToSection;
+
+  function refreshData() {
+    fetch('/api/youtube/refresh').then(function(r){return r.json();}).then(function(d){
+      alert(d.message || 'Refresh started');
+      setTimeout(loadEverything, 3000);
+    });
+  }
+  window.refreshData = refreshData;
+
+  // ════════════════ FILTERS ═══════════════
+  function filterStream(stream) {
+    currentStream = stream;
+    document.querySelectorAll('.stream-chip').forEach(function(c) {
+      c.classList.toggle('active', c.dataset.stream === stream);
+    });
+    loadTrending();
+    loadAnalytics();
+  }
+  window.filterStream = filterStream;
+
+  function filterType(type) {
+    currentType = type;
+    document.querySelectorAll('.content-tab').forEach(function(t) {
+      t.classList.toggle('active', t.dataset.type === type);
+    });
+    loadTrending();
+  }
+  window.filterType = filterType;
+
+  // ════════════════ HELPERS ═══════════════
+  function formatNumber(n) {
+    if (!n) return '0';
+    n = parseInt(n);
+    if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+    if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
+    return String(n);
+  }
+  function formatDate(d) {
+    if (!d) return '';
+    try {
+      var date = new Date(d);
+      var diff = (new Date() - date) / (1000*60*60*24);
+      if (diff < 1) return 'today';
+      if (diff < 2) return '1 day ago';
+      if (diff < 7) return Math.floor(diff) + ' days ago';
+      if (diff < 30) return Math.floor(diff/7) + ' weeks ago';
+      return Math.floor(diff/30) + ' months ago';
+    } catch(e) { return ''; }
+  }
+
+  function showLoading() {
+    var grid = document.getElementById('loadingGrid');
+    grid.style.display = 'grid';
+    var area = document.getElementById('contentArea');
+    area.innerHTML = '';
+    area.appendChild(grid);
+  }
+
+  // ════════════════ LOAD TRENDING ════════════════
+  function loadTrending() {
+    showLoading();
+    var url = '/api/youtube/trending?stream=' + currentStream + '&type=' + currentType;
+    console.log('[Trending] Fetching:', url);
+
+    fetch(url)
+      .then(function(r) { return r.json(); })
+      .then(function(resp) {
+        console.log('[Trending] Response:', resp.status, 'count=' + resp.count, 'stream=' + resp.stream_filter);
+        renderTrending(resp);
+        updateStats(resp);
+      })
+      .catch(function(err) {
+        document.getElementById('contentArea').innerHTML =
+          '<div class="state-box"><div class="state-icon">\u26A0\uFE0F</div><h3>Error</h3><p>' + err.message + '</p></div>';
+      });
+  }
+
+  function renderTrending(resp) {
+    var data = resp.data || [];
+    var source = resp.source;
+    var area = document.getElementById('contentArea');
+
+    // Update source badge
+    var badge = document.getElementById('sourceBadge');
+    if (source === 'live') {
+      badge.className = 'source-badge live';
+      badge.innerHTML = '<span class="live-dot"></span> LIVE';
+    } else {
+      badge.className = 'source-badge demo';
+      badge.innerHTML = '<span class="live-dot"></span> DEMO';
+    }
+
+    // Update cache status
+    if (resp.cache_updated) {
+      document.getElementById('cacheStatus').textContent = 'Updated: ' + new Date(resp.cache_updated).toLocaleTimeString();
+    }
+
+    if (!data || data.length === 0) {
+      area.innerHTML = '<div class="state-box"><div class="state-icon">\uD83D\uDD0D</div><h3>No trending content found</h3><p>Try a different stream filter.</p></div>';
+      return;
+    }
+
+    var grid = document.createElement('div');
+    grid.className = 'trend-grid';
+
+    data.forEach(function(item) {
+      var card = document.createElement('div');
+      card.className = 'trend-card';
+
+      var title = item.title || 'Untitled';
+      var creator = item.channel_name || item.youtuber || item.handle_name || 'Unknown';
+      var views = parseInt(item.views) || 0;
+      var likes = parseInt(item.likes) || 0;
+      var comments = parseInt(item.num_comments) || 0;
+      var date = formatDate(item.date_posted);
+      var stream = item.stream || currentStream || 'trending';
+      var duration = item.duration || '';
+      var thumb = item.preview_image || item.thumbnail || '';
+      var link = item.url || item.video_url || '#';
+
+      card.onclick = function() { window.open(link, '_blank'); };
+
+      // Check if short
+      var isShort = false;
+      if (duration) {
+        var parts = String(duration).split(':');
+        try {
+          if (parts.length === 2) {
+            var secs = parseInt(parts[0])*60 + parseInt(parts[1]);
+            if (secs <= 60) isShort = true;
+          } else if (parts.length === 1) {
+            if (parseInt(parseFloat(parts[0])) <= 60) isShort = true;
+          }
+        } catch(e) {}
+      }
+
+      var html = '';
+      html += '<span class="card-stream">' + stream + '</span>';
+      if (isShort) html += '<span class="card-type-badge">SHORT</span>';
+      if (thumb) {
+        html += '<img class="card-thumb" src="' + thumb + '" alt="" onerror="this.style.display=\'none\'">';
+      } else {
+        html += '<div class="card-thumb" style="display:flex;align-items:center;justify-content:center;font-size:2.5rem;">\u25B6\uFE0F</div>';
+      }
+      if (duration) html += '<span class="card-duration">' + duration + '</span>';
+      html += '<div class="card-body">';
+      html += '<div class="card-title">' + title + '</div>';
+      html += '<div class="card-creator">@' + creator + '</div>';
+      html += '<div class="card-stats">';
+      html += '<span>\uD83D\uDC41 ' + formatNumber(views) + '</span>';
+      html += '<span>\u2764\uFE0F ' + formatNumber(likes) + '</span>';
+      if (comments) html += '<span>\uD83D\uDCAC ' + formatNumber(comments) + '</span>';
+      html += '</div>';
+      if (date) html += '<div style="margin-top:6px;font-size:0.72rem;color:var(--text-mute);">\uD83D\uDCC5 ' + date + '</div>';
+      html += '</div>';
+
+      card.innerHTML = html;
+      grid.appendChild(card);
+    });
+
+    area.innerHTML = '';
+    area.appendChild(grid);
+  }
+
+  function updateStats(resp) {
+    var data = resp.data || [];
+    document.getElementById('statTotal').textContent = data.length;
+    document.getElementById('statVideos').textContent = resp.total_videos || 0;
+    document.getElementById('statShorts').textContent = resp.total_shorts || 0;
+
+    if (data.length > 0) {
+      var totalViews = data.reduce(function(s, d) {
+        return s + (parseInt(d.views) || 0);
+      }, 0);
+      document.getElementById('statAvgViews').textContent = formatNumber(Math.round(totalViews / data.length));
+    } else {
+      document.getElementById('statAvgViews').textContent = '\u2014';
+    }
+  }
+
+  // ════════════════ LOAD ANALYTICS ════════════════
+  function loadAnalytics() {
+    var url = '/api/youtube/analytics?stream=' + currentStream;
+    console.log('[Analytics] Fetching:', url);
+
+    fetch(url)
+      .then(function(r) { return r.json(); })
+      .then(function(resp) {
+        console.log('[Analytics] Response:', resp.status, 'videos=' + resp.total_videos);
+        renderViewDist(resp.view_distribution || []);
+        renderTopVideos(resp.top_videos || []);
+        renderStreamComparison(resp.stream_comparison || []);
+      })
+      .catch(function(err) {
+        console.error('[Analytics] Error:', err);
+        document.getElementById('viewDistChart').innerHTML = '<p style="color:var(--text-mute);font-size:0.85rem;">Failed to load analytics</p>';
+        document.getElementById('topVideosList').innerHTML = '<p style="color:var(--text-mute);font-size:0.85rem;">Failed to load</p>';
+        document.getElementById('streamComparison').innerHTML = '<p style="color:var(--text-mute);font-size:0.85rem;">Failed to load</p>';
+      });
+  }
+
+  function renderViewDist(dist) {
+    var container = document.getElementById('viewDistChart');
+    if (!dist || dist.length === 0) {
+      container.innerHTML = '<p style="color:var(--text-mute);font-size:0.85rem;">No data available</p>';
+      return;
+    }
+    var maxCount = Math.max.apply(null, dist.map(function(d) { return d.count; }));
+    if (maxCount === 0) maxCount = 1;
+
+    var html = '';
+    dist.forEach(function(d) {
+      var pct = (d.count / maxCount) * 100;
+      html += '<div class="bar-row">';
+      html += '<span class="bar-label">' + d.label + '</span>';
+      html += '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%;">';
+      if (d.count > 0) html += '<span class="bar-value">' + d.count + '</span>';
+      html += '</div></div>';
+      html += '</div>';
+    });
+    container.innerHTML = html;
+  }
+
+  function renderTopVideos(videos) {
+    var container = document.getElementById('topVideosList');
+    if (!videos || videos.length === 0) {
+      container.innerHTML = '<p style="color:var(--text-mute);font-size:0.85rem;">No top videos found</p>';
+      return;
+    }
+    var html = '';
+    videos.forEach(function(v, i) {
+      var title = v.title || 'Untitled';
+      var creator = v.channel_name || v.youtuber || 'Unknown';
+      var views = parseInt(v.views) || 0;
+      var stream = v.stream || currentStream || 'trending';
+      var link = v.url || '#';
+      html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer;" onclick="window.open(\'' + link + '\', \'_blank\')">';
+      html += '<span style="font-size:1.2rem;font-weight:800;color:var(--accent);min-width:24px;">#' + (i+1) + '</span>';
+      html += '<div style="flex:1;min-width:0;">';
+      html += '<div style="font-size:0.85rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + title + '</div>';
+      html += '<div style="font-size:0.75rem;color:var(--text-mute);">@' + creator + ' &middot; ' + stream + '</div>';
+      html += '</div>';
+      html += '<span style="font-size:0.78rem;font-weight:700;color:var(--accent);font-family:var(--font-mono);">' + formatNumber(views) + '</span>';
+      html += '</div>';
+    });
+    container.innerHTML = html;
+  }
+
+  function renderStreamComparison(streams) {
+    var container = document.getElementById('streamComparison');
+    if (!streams || streams.length === 0) {
+      container.innerHTML = '<p style="color:var(--text-mute);font-size:0.85rem;">No comparison data</p>';
+      return;
+    }
+    var maxViews = Math.max.apply(null, streams.map(function(s) { return s.avg_views; }));
+    if (maxViews === 0) maxViews = 1;
+
+    var html = '';
+    streams.forEach(function(s) {
+      var pct = (s.avg_views / maxViews) * 100;
+      html += '<div class="stream-bar-row">';
+      html += '<span class="stream-bar-label">' + s.stream + '</span>';
+      html += '<div class="stream-bar-track"><div class="stream-bar-fill" style="width:' + pct + '%;"></div></div>';
+      html += '<span class="stream-bar-value">' + formatNumber(s.avg_views) + '</span>';
+      html += '</div>';
+    });
+    container.innerHTML = html;
+  }
+
+
+
+  // ═══════════════ LOAD EVERYTHING ═══════════════
+  function loadEverything() {
+    loadTrending();
+    loadAnalytics();
+  }
+
+  // ════════════════ INIT ════════════════
+  applyTheme();
+  loadEverything();
+
+  // Auto-refresh every 15 minutes
+  setInterval(loadEverything, 15 * 60 * 1000);
+})();
+</script>
+</body>
+</html>
