@@ -6,10 +6,10 @@ This document explains exactly how TrendPulse uses BrightData Scraper Studio to 
 
 ## 1. Which Scraper We Use
 
-TrendPulse uses BrightData's **pre-built YouTube scraper**, not a custom AI-built scraper. Pre-built scrapers are maintained by BrightData â€” they handle proxy rotation, anti-bot bypassing, and parsing automatically. We never have to update parsing logic when YouTube changes their page structure.
+TrendPulse uses BrightData's **pre-built YouTube scraper**, not a custom AI-built scraper. Pre-built scrapers are maintained by BrightData -- they handle proxy rotation, anti-bot bypassing, and parsing automatically. We never have to update parsing logic when YouTube changes their page structure.
 
 **Scraper location in BrightData dashboard:**
-- Go to Scrapers â†’ Scrapers Library â†’ search "youtube"
+- Go to Scrapers -> Scrapers Library -> search "youtube"
 - Select "Youtube - Videos posts"
 - Use the "Discover by keyword" endpoint
 
@@ -42,6 +42,7 @@ The API key is obtained from https://brightdata.com/cp/setting/users and stored 
 ## 3. Request Flow (Step by Step)
 
 ### Step 1: Trigger the scrape
+
 When a user clicks a stream filter (e.g., "Gaming"), the backend sends a POST request to BrightData's `/trigger` endpoint:
 
 ```python
@@ -65,9 +66,10 @@ Body:
 ]
 ```
 
-The `start_date` parameter ensures only videos from the last 7 days are returned â€” this is what makes TrendPulse show recent trends instead of old popular videos.
+The `start_date` parameter ensures only videos from the last 7 days are returned -- this is what makes TrendPulse show recent trends instead of old popular videos.
 
 ### Step 2: Receive snapshot_id
+
 BrightData responds with a snapshot ID:
 
 ```json
@@ -77,6 +79,7 @@ BrightData responds with a snapshot ID:
 ```
 
 ### Step 3: Poll for completion
+
 The backend polls the progress endpoint until the scrape is ready:
 
 ```python
@@ -95,6 +98,7 @@ Response when ready:
 ```
 
 ### Step 4: Download results
+
 Once ready, the backend downloads the structured JSON data:
 
 ```python
@@ -107,7 +111,7 @@ Headers: Authorization: Bearer YOUR_API_KEY
 
 ## 4. Response Structure
 
-BrightData returns clean, structured JSON â€” no HTML parsing needed. Each video record contains:
+BrightData returns clean, structured JSON -- no HTML parsing needed. Each video record contains:
 
 ```json
 {
@@ -141,26 +145,91 @@ TrendPulse adds a self-healing layer on top of BrightData's scraper. The `Bright
 ### Healing Cycle (repeats up to 3 times):
 
 1. **Send request** to BrightData API
-2. **Retry on failure** â€” if the request fails (HTTP 429 rate limit, 500+ server error), wait and retry up to 3 times with increasing delay (5s, 10s, 15s)
-3. **Sync-to-async fallback** â€” if a synchronous request times out (>60s), BrightData returns a `snapshot_id`. The code detects this and automatically switches to async polling mode
-4. **Validate each record** â€”]™\žH™]\›™Y™XÛÜ™\ÈÚXÚÙY›Üˆ™\]Z\™YšY[È
-\›]XšY]ÜØ
-Kˆ™XÛÜ™ÈÚ]Z\ÜÚ[™ËÛ[šY[È\™H›YÙÙY\È˜œ›ÚÙ[ˆ‚Kˆ
-Š”™K\ØÜ˜\Hœ›ÚÙ[ˆ™XÛÜ™ÊŠˆ8 %Û›HHœ›ÚÙ[ˆ™XÛÜ™ÉÈ[œ]T“È\™HÛÛXÝY[™™K\™\]Y\ÝY[ˆH™^ÞXÛB‹ˆ
-Š”™]\›ˆÛX[™Y]JŠˆ8 %Y\ˆ[ÞXÛ\ËÛ›H˜[Y™XÛÜ™È\™H™]\›™Y‚ˆÈÈÈÛÛœÛÛHÝ]]\š[™ÈX[[™Î‚˜–ÒPSHœ›ÚÙ[ˆ™XÛÜ™ÌËÚ[™K\ØÜ˜\NˆÈšÙ^]ÛÜ™Žˆ™Ø[Z[™ÈYÚYÚÈŸB–ÒPSHÞXÛHNˆHœ›ÚÙ[ˆ™XÛÜ™Ë™]žZ[™Ë‹‹‚–ÒPSHÞXÛHŽˆ[MH™XÛÜ™È˜[Y8§$‚˜‚ˆÈÈÈ]]\œ›Üˆ[™[™Î‚’YˆHTHÙ^H\È[˜[Y
-JKHÛÙH[[YYX][H˜Z\Ù\ÈHÛX\ˆ\œ›ÜŽ‚˜UURSQˆÚXÚÈ[Ý\ˆ”’QÒUWÐTWÒÑVH[ˆ™[ˆš[B˜‚‹KKB‚ˆÈÈ‹ˆØÚY[YØÜ˜\[™Â‚•HØÚY[YØÜ˜\\˜Û\ÜÈ[œÈ]]ÛX]XØ[N‚‚ŒKˆ
-Š“ÛˆÝ\\
-Šˆ8 %ØÜ˜\\È[LÝ™X[\È[[YYX][H
-ÜˆØYÈœ›ÛHØXÚYÙ]KšœÛÛ˜YˆTÑWÐÐPÒQÑUO]YX
-BŒ‹ˆ
-Š‘]™\žHÝ\œÊŠˆ8 %™K\ØÜ˜\\È[Ý™X[\ÈÈ™Yœ™\Ú™[™]BŒËˆ
-Š“Û]H™\XÙY
-Šˆ8 %XXÚØÜ˜\HÝ™\Üš]\ÈHØXÚKÛÈ™[™ÈÝ^HÝ\œ™[ˆ
-ŠØXÚHØ]™YÈš[JŠˆ8 %Y\ˆXXÚØÜ˜\K]H\ÈØ]™YÈØXÚYÙ]KšœÛÛ˜›ÜˆÜ™Y]\Ø]š[™È[ÙB‚ˆÈÈÝ™X[\ÈØÜ˜\Y‚‘XXÚÝ™X[HX\ÈÈHÙX\˜ÚÙ^]ÛÜ™Ù[ÈœšYÚ]N‚‚ŸÝ™X[HÙ^]ÛÜ™Ù[ÈœšYÚ]HŸKK_KK_ŸØ[Z[™È™Ø[Z[™ÈYÚYÚÈˆŸYXØ][Ûˆ]ÜšX[ˆŸXÚXÚ™]šY]ÈˆŸ]\ÚXÈ›]\ÚXÈšY[ÈˆŸÛÛYYH™[›žHˆŸš]™\ÜÈÛÜšÛÝ]ˆŸÛÛÚÚ[™Èœ™XÚ\HˆŸY™\Ý[H›ÙÈˆŸ™]ÜÈ˜œ™XZÚ[™È™]ÜÈˆŸš[˜[˜ÙHœÝØÚÈX\šÙ]ˆ‚‹KKB‚ˆÈÈËˆÜ™Y]TØ]š[™È[ÙB‚•È]›ÚYØ\Ý[™ÈœšYÚ]HÜ™Y]È\š[™È]™[ÜY[‚‚ŒKˆÙ]TÑWÐÐPÒQÑUOY˜[ÙX[ˆ™[˜[ˆÛ˜ÙHÚ]™X[THÙ^BŒ‹ˆ]H\ÈØ]™YÈØXÚYÙ]KšœÛÛ˜ŒËˆÙ]TÑWÐÐPÒQÑUO]YX™\Ý\ˆ\ØYÈœ›ÛHš[H8 %™\›ÈTHØ[Ë™\›ÈÜ™Y]È\ÙYKˆ]™[Ü[™XYÈœ™Y[B‹ˆÚ[ˆ™XYH›Üˆœ™\Ú]KÙ]˜XÚÈÈ˜[ÙX‚‹KKB‚ˆÈÈˆ]H›ØÙ\ÜÚ[™È\[[™B‚˜•\Ù\ˆÛXÚÜÈ‘Ø[Z[™Èˆš[\‚ˆ8¡¤Â‘›\ÚÈ˜XÚÙ[™™XÙZ]™\È™\]Y\Ýˆ8¡¤ÂÚXÚÈØXÚH›Üˆ™Ø[Z[™ÈˆÝ™X[Bˆ8¡¤Â’YˆØXÚH[\H8¡¤ˆÙ[™Ù^]ÛÜ™™Ø[Z[™ÈYÚYÚÈˆÈœšYÚ]HTBˆ8¡¤ÂœšYÚ]HØÜ˜\\È[ÝUX™HÙX\˜Ú™\Ý[Âˆ8¡¤Â”Ù[‹ZX[[™Îˆ˜[Y]H
-È™K\ØÜ˜\Hœ›ÚÙ[ˆ™XÛÜ™Âˆ8¡¤Â“›Ü›X[^™HšY[˜[Y\È
-[Ý]X™\ˆ8¡¤ˆÚ[›™[Û˜[YK]ËŠBˆ8¡¤Â‘š[\ˆÈ\ÝÈ^\ÈžH]WÜÜÝYˆ8¡¤Â”Ù\\˜]H[ÈšY[ÜÈ
-ŒÊÊH[™ÚÜÈ
-ŒÊBˆ8¡¤Â”ÛÜžHšY]ÜÈ
-YÚ\Ýš\œÝ
-Bˆ8¡¤Â”™]\›ˆ”ÓÓˆÈœ›Û[™ˆ8¡¤Â‘œ›Û[™™[™\œÈ™[™Ø\™È
-È[˜[]XÜÈÚ\Â˜
+2. **Retry on failure** -- if the request fails (HTTP 429 rate limit, 500+ server error), wait and retry up to 3 times with increasing delay (5s, 10s, 15s)
+3. **Sync-to-async fallback** -- if a synchronous request times out (>60s), BrightData returns a `snapshot_id`. The code detects this and automatically switches to async polling mode
+4. **Validate each record** -- every returned record is checked for required fields (`url`, `title`, `views`). Records with missing/null fields are flagged as "broken"
+5. **Re-scrape broken records** -- only the broken records' input URLs are collected and re-requested in the next cycle
+6. **Return cleaned data** -- after all cycles, only valid records are returned
+
+### Console output during healing:
+```
+[HEAL] Broken record #3, will re-scrape: {"keyword": "gaming highlights"}
+[HEAL] Cycle 1: 1 broken records, retrying...
+[HEAL] Cycle 2: all 15 records valid
+```
+
+### Auth error handling:
+If the API key is invalid (HTTP 401), the code immediately raises a clear error:
+```
+AUTH FAILED: Check your BRIGHTDATA_API_KEY in .env file
+```
+
+---
+
+## 6. Scheduled Scraping
+
+The `ScheduledScraper` class runs automatically:
+
+1. **On startup** -- scrapes all 10 streams immediately (or loads from `cached_data.json` if `USE_CACHED_DATA=true`)
+2. **Every 4 hours** -- re-scrapes all streams to refresh trend data
+3. **Old data replaced** -- each scrape overwrites the cache, so trends stay current
+4. **Cache saved to file** -- after each scrape, data is saved to `cached_data.json` for credit-saving mode
+
+### Streams scraped:
+Each stream maps to a search keyword sent to BrightData:
+
+| Stream | Keyword sent to BrightData |
+|---|---|
+| Gaming | "gaming highlights" |
+| Education | "tutorial" |
+| Tech | "tech review" |
+| Music | "music video" |
+| Comedy | "funny" |
+| Fitness | "workout" |
+| Cooking | "recipe" |
+| Lifestyle | "vlog" |
+| News | "breaking news" |
+| Finance | "stock market" |
+
+---
+
+## 7. Credit-Saving Mode
+
+To avoid wasting BrightData credits during development:
+
+1. Set `USE_CACHED_DATA=false` in `.env`, run once with real API key
+2. Data is saved to `cached_data.json`
+3. Set `USE_CACHED_DATA=true`, restart
+4. App loads from file -- zero API calls, zero credits used
+5. Develop and debug freely
+6. When ready for fresh data, set back to `false`
+
+---
+
+## 8. Data Processing Pipeline
+
+```
+User clicks "Gaming" filter
+        |
+Flask backend receives request
+        |
+Check cache for "gaming" stream
+        |
+If cache empty -> send keyword "gaming highlights" to BrightData API
+        |
+BrightData scrapes YouTube search results
+        |
+Self-healing: validate + re-scrape broken records
+        |
+Normalize field names (youtuber -> channel_name, etc.)
+        |
+Filter to last 7 days by date_posted
+        |
+Separate into videos (60s+) and shorts (<60s)
+        |
+Sort by views (highest first)
+        |
+Return JSON to frontend
+        |
+Frontend renders trend cards + analytics charts
+```
