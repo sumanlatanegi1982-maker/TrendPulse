@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrendPulse — System Architecture</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: #0d0d0d;
+  color: #e0e0e0;
+  padding: 40px 20px;
+  min-height: 100vh;
+}
+.container { max-width: 1100px; margin: 0 auto; }
+h1 {
+  text-align: center;
+  font-size: 2.2em;
+  color: #fff;
+  margin-bottom: 8px;
+}
+h1 span { color: #e63946; }
+.subtitle {
+  text-align: center;
+  color: #888;
+  margin-bottom: 40px;
+  font-size: 1.1em;
+}
+.layer {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  position: relative;
+}
+.layer-title {
+  font-size: 1.1em;
+  font-weight: 700;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.layer-title .icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2em;
+}
+.layer-label {
+  position: absolute;
+  top: -10px; right: 20px;
+  background: #e63946;
+  color: #fff;
+  padding: 2px 12px;
+  border-radius: 20px;
+  font-size: 0.75em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.boxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+.box {
+  background: #222;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 14px 18px;
+  text-align: center;
+  min-width: 140px;
+  transition: border-color 0.2s;
+}
+.box:hover { border-color: #e63946; }
+.box .name { font-weight: 600; color: #fff; font-size: 0.95em; }
+.box .desc { color: #999; font-size: 0.8em; margin-top: 4px; }
+.box.red { border-left: 3px solid #e63946; }
+.box.green { border-left: 3px solid #2a9d8f; }
+.box.blue { border-left: 3px solid #4361ee; }
+.box.orange { border-left: 3px solid #f4a261; }
+.box.purple { border-left: 3px solid #9d4edd; }
+
+.arrow-down {
+  text-align: center;
+  font-size: 1.8em;
+  color: #555;
+  margin: 6px 0;
+}
+.flow-diagram {
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 30px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85em;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre;
+  color: #b0b0b0;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 20px;
+  justify-content: center;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85em;
+  color: #aaa;
+}
+.legend-dot {
+  width: 12px; height: 12px;
+  border-radius: 3px;
+}
+.section-title {
+  font-size: 1.4em;
+  color: #fff;
+  margin: 40px 0 16px;
+  border-bottom: 2px solid #e63946;
+  padding-bottom: 8px;
+}
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+.feature-card {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 18px;
+}
+.feature-card h3 {
+  color: #e63946;
+  font-size: 1em;
+  margin-bottom: 8px;
+}
+.feature-card p {
+  color: #aaa;
+  font-size: 0.88em;
+  line-height: 1.5;
+}
+.steps {
+  counter-reset: step;
+}
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  align-items: flex-start;
+}
+.step-num {
+  background: #e63946;
+  color: #fff;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+  font-size: 0.9em;
+  flex-shrink: 0;
+}
+.step-content {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 12px 16px;
+  flex: 1;
+}
+.step-content strong { color: #fff; }
+.step-content code {
+  background: #0d0d0d;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  color: #e63946;
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>Trend<span>Pulse</span> — System Architecture</h1>
+<p class="subtitle">YouTube Trend Analytics · Powered by Bright Data Scraper Studio</p>
+
+<!-- LAYER 1: USER -->
+<div class="layer">
+  <div class="layer-label">Layer 1</div>
+  <div class="layer-title">
+    <div class="icon" style="background:#e63946;">🌐</div>
+    User Interface (Browser)
+  </div>
+  <div class="boxes">
+    <div class="box red">
+      <div class="name">Stream Filters</div>
+      <div class="desc">10 content streams</div>
+    </div>
+    <div class="box red">
+      <div class="name">Videos / Shorts Tabs</div>
+      <div class="desc">Auto-separated by duration</div>
+    </div>
+    <div class="box red">
+      <div class="name">Analytics Dashboard</div>
+      <div class="desc">Charts, Top 5, Comparison</div>
+    </div>
+    <div class="box red">
+      <div class="name">Refresh Button</div>
+      <div class="desc">Trigger manual scrape</div>
+    </div>
+  </div>
+</div>
+
+<div class="arrow-down">↓</div>
+
+<!-- LAYER 2: FLASK -->
+<div class="layer">
+  <div class="layer-label">Layer 2</div>
+  <div class="layer-title">
+    <div class="icon" style="background:#4361ee;">⚙️</div>
+    Flask Backend (app.py)
+  </div>
+  <div class="boxes">
+    <div class="box blue">
+      <div class="name">/api/youtube/trending</div>
+      <div class="desc">Returns filtered video list</div>
+    </div>
+    <div class="box blue">
+      <div class="name">/api/youtube/analytics</div>
+      <div class="desc">Returns charts + top videos</div>
+    </div>
+    <div class="box blue">
+      <div class="name">/api/youtube/refresh</div>
+      <div class="desc">Triggers fresh Bright Data scrape</div>
+    </div>
+    <div class="box blue">
+      <div class="name">get_videos_for_stream()</div>
+      <div class="desc">Centralized fetch + re-tagging</div>
+    </div>
+  </div>
+</div>
+
+<div class="arrow-down">↓</div>
+
+<!-- LAYER 3: CACHE + CLIENT -->
+<div class="layer">
+  <div class="layer-label">Layer 3</div>
+  <div class="layer-title">
+    <div class="icon" style="background:#2a9d8f;">💾</div>
+    Cache + Self-Healing Client
+  </div>
+  <div class="boxes">
+    <div class="box green">
+      <div class="name">cached_data.json</div>
+      <div class="desc">Credit-saving cache (0 API calls)</div>
+    </div>
+    <div class="box green">
+      <div class="name">BrightDataClient</div>
+      <div class="desc">Async trigger → poll → snapshot</div>
+    </div>
+    <div class="box green">
+      <div class="name">Self-Healing (_healed_scrape)</div>
+      <div class="desc">Validates fields, retries broken (3 cycles)</div>
+    </div>
+    <div class="box green">
+      <div class="name">Scheduler</div>
+      <div class="desc">Daily 2 AM auto-scrape</div>
+    </div>
+  </div>
+</div>
+
+<div class="arrow-down">↓</div>
+
+<!-- LAYER 4: BRIGHTDATA -->
+<div class="layer">
+  <div class="layer-label">Layer 4</div>
+  <div class="layer-title">
+    <div class="icon" style="background:#f4a261;">🔌</div>
+    Bright Data Scraper Studio (External API)
+  </div>
+  <div class="boxes">
+    <div class="box orange">
+      <div class="name">POST /datasets/v3/trigger</div>
+      <div class="desc">Start async scrape</div>
+    </div>
+    <div class="box orange">
+      <div class="name">GET /datasets/v3/progress</div>
+      <div class="desc">Poll scrape status</div>
+    </div>
+    <div class="box orange">
+      <div class="name">GET /datasets/v3/snapshot</div>
+      <div class="desc">Download structured JSON</div>
+    </div>
+    <div class="box orange">
+      <div class="name">Dataset: gd_lk56epmy2i5g7lzu0k</div>
+      <div class="desc">YouTube Videos (pre-built)</div>
+    </div>
+  </div>
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#e63946;"></div> Frontend</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#4361ee;"></div> Backend API</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#2a9d8f;"></div> Cache + Client</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f4a261;"></div> Bright Data API</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#9d4edd;"></div> Data Flow</div>
+</div>
+
+<!-- DATA FLOW -->
+<h2 class="section-title">Data Flow — Step by Step</h2>
+<div class="steps">
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-content">
+      <strong>User opens browser</strong> → Flask serves <code>index.html</code> → Frontend renders stream filter buttons (Gaming, Education, Tech, etc.)
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-content">
+      <strong>Frontend calls</strong> <code>/api/youtube/trending?stream=gaming</code> → Backend checks if <code>cached_data.json</code> exists
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">3a</div>
+    <div class="step-content">
+      <strong>Cache HIT</strong> → Load videos from <code>cached_data.json</code> → Re-tag each video with correct stream → Return to frontend (ZERO API calls)
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">3b</div>
+    <div class="step-content">
+      <strong>Cache MISS</strong> → Call <code>BrightDataClient.scrape_youtube_videos()</code> → Trigger async scrape → Poll for completion → Download results
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-content">
+      <strong>Self-Healing</strong> → Validate each record (url, title required) → Broken records re-scraped up to 3 cycles → Good records merged → Saved to <code>cached_data.json</code>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">5</div>
+    <div class="step-content">
+      <strong>Frontend renders</strong> → Video cards with thumbnails, titles, views, likes → Analytics charts (view distribution, top 5, stream comparison)
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">6</div>
+    <div class="step-content">
+      <strong>Scheduled refresh</strong> → Background thread runs <code>schedule.run_pending()</code> every 60s → At 2:00 AM daily → Re-scrape all streams → Overwrite cache
+    </div>
+  </div>
+</div>
+
+<!-- SELF-HEALING DETAIL -->
+<h2 class="section-title">Self-Healing Flow (Detailed)</h2>
+<div class="flow-diagram">Scrape YouTube via Bright Data API
+        │
+        ▼
+  ┌──────────────────┐
+  │ Validate Records │  Check: url, title not null/empty
+  └────────┬─────────┘
+           │
+     ┌─────┴─────┐
+     ▼           ▼
+  GOOD        BROKEN
+     │           │
+     │     ┌─────┴──────┐
+     │     │ Retry scrape │  Cycle 1
+     │     │ (broken only)│
+     │     └─────┬──────┘
+     │           │
+     │     ┌─────┴─────┐
+     │     ▼           ▼
+     │   HEALED     STILL BROKEN
+     │     │           │
+     │     │     ┌─────┴──────┐
+     │     │     │ Retry scrape │  Cycle 2
+     │     │     └─────┬──────┘
+     │     │           │
+     │     │     ┌─────┴─────┐
+     │     │     ▼           ▼
+     │     │   HEALED     STILL BROKEN
+     │     │     │           │
+     │     │     │     ┌─────┴──────┐
+     │     │     │     │ Retry scrape │  Cycle 3
+     │     │     │     └─────┬──────┘
+     │     │     │           │
+     │     │     │     ┌─────┴─────┐
+     │     │     │     ▼           ▼
+     │     │     │   HEALED     STILL BROKEN → SKIP (log warning)
+     │     │     │           │
+     └─────┴─────┴───────────┘
+                   │
+                   ▼
+         ┌──────────────────┐
+         │ Merge all good   │
+         │ Save to cache    │
+         │ Return to user   │
+         └──────────────────┘</div>
+
+<!-- FEATURES -->
+<h2 class="section-title">Key Features</h2>
+<div class="feature-grid">
+  <div class="feature-card">
+    <h3>🎯 10 Content Streams</h3>
+    <p>Gaming, Education, Tech, Music, Comedy, Fitness, Cooking, Lifestyle, News, Finance — each with 3 search keywords scraped via Bright Data.</p>
+  </div>
+  <div class="feature-card">
+    <h3>🔄 Self-Healing Scraper</h3>
+    <p>If Bright Data returns broken records (missing title, null URL), the system automatically re-scrapes just those records up to 3 times before skipping.</p>
+  </div>
+  <div class="feature-card">
+    <h3>💰 Credit-Saving Cache</h3>
+    <p>Scrape once → save to cached_data.json → reuse indefinitely with zero API calls. Set USE_CACHED_DATA=true to skip the API entirely.</p>
+  </div>
+  <div class="feature-card">
+    <h3>⏰ Scheduled Auto-Scraping</h3>
+    <p>Background scheduler runs daily at 2:00 AM — scrapes all 10 streams and replaces old data. New trends are always fresh.</p>
+  </div>
+  <div class="feature-card">
+    <h3>📅 7-Day Recency Filter</h3>
+    <p>Only videos from the last 7 days are shown — regardless of view count. This ensures you see current trends, not evergreen content.</p>
+  </div>
+  <div class="feature-card">
+    <h3>📊 Analytics Dashboard</h3>
+    <p>View distribution bar chart (6 buckets), Top 5 trending videos ranked by views, and stream comparison showing which stream has the highest average views.</p>
+  </div>
+  <div class="feature-card">
+    <h3>🎬 Videos + Shorts Separation</h3>
+    <p>Automatically parses duration and separates Shorts (≤60 seconds) from regular videos. Toggle between tabs to focus on either format.</p>
+  </div>
+  <div class="feature-card">
+    <h3>🔧 Corrupted Cache Fix</h3>
+    <p>On cache load, every video is force re-tagged with its correct stream from the cache key — fixes data corrupted by old code mutations.</p>
+  </div>
+</div>
+
+</div>
+</body>
+</html>
